@@ -43,7 +43,7 @@ Be sure the update the paths properly for your system.
 [Desktop Entry]
 Version=1.0
 Name=Game Name
-Exec=bash -c "python3 -m venv myvenv && source /location/of/code/myvenv/bin/activate && pip install -r requirements.txt && /usr/bin/python3 /location/of/code/main.py"
+Exec=bash -c "python3 -m venv myvenv && source /location/of/code/myvenv/bin/activate && pip install -r requirements.txt && /usr/bin/python3 /location/of/code/app/main.py"
 Terminal=false
 Type=Application
 Path=/location/of/code
@@ -94,9 +94,13 @@ if [ -d "$GAME_DIR" ]; then
     rm -rf "$GAME_DIR"
 fi
 
-# Step 4: Move the extracted content into the game directory
+# Step 4: Create the parent directory for the game directory
+echo "Ensuring destination directory exists..."
+mkdir -p "$(dirname "$GAME_DIR")"
+
+# Step 5: Move the extracted content into the game directory
 echo "Copying new game files..."
-mv "$EXTRACT_DIR/pygame_cant_catch_me-main" "$GAME_DIR"
+mv "$EXTRACT_DIR" "$GAME_DIR"
 if [ $? -ne 0 ]; then
     echo "Failed to move new game files."
     rm -rf "$EXTRACT_DIR"
@@ -104,7 +108,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Step 5: Clean up temporary files
+# Step 6: Clean up temporary files
 echo "Cleaning up..."
 rm -rf "$EXTRACT_DIR"
 rm -f "$ZIP_FILE"
