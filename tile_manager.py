@@ -6,10 +6,10 @@ from tile import Tile
 
 class TileManager:
 
-    tile_width = 40
-    tile_height = 40
+    tile_width = 64
+    tile_height = 64
     column_count = 20
-    row_count = 12
+    row_count = 10
     tile_width_offset = tile_width / 2
     tile_height_offset = tile_height / 2
     tile_circle_radius = min(tile_width, tile_height) / 2

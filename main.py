@@ -11,7 +11,7 @@ class Main:
     def __init__(self) -> None:
         pygame.init()
         self.dt = 0
-        self.bounds = pygame.Rect(0, 0, 800, 480)
+        self.bounds = pygame.Rect(0, 0, 1280, 640)
         self.current_state = GameState.MENU
         self.state_objects = {
             GameState.MENU: Menu(self.bounds),
