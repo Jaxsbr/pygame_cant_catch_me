@@ -1,0 +1,6 @@
+import pygame
+
+
+CHANGE_STATE_EVENT = pygame.USEREVENT + 1
+PLAYER_MOVED_EVENT = pygame.USEREVENT + 2
+
