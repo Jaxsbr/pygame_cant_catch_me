@@ -1,7 +1,7 @@
 import random
 
 import pygame
-from tile import Tile
+from game_state.tile import Tile
 
 
 class TileManager:

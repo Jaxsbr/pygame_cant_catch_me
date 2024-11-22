@@ -1,13 +1,12 @@
-import os
 import pygame
 import random
-from enemy import Enemy
-from events import CHANGE_STATE_EVENT, PLAYER_MOVED_EVENT
+from game_state.enemy import Enemy
+from game_state.events import CHANGE_STATE_EVENT
 from enums import GameState, GameStatuses
 from state import State
-from player import Player
-from tile_manager import TileManager
-from tile_utils import get_surrounding_linear_indexes, get_surrounding_tile_indexes
+from game_state.player import Player
+from game_state.tile_manager import TileManager
+from game_state.tile_utils import get_surrounding_linear_indexes, get_surrounding_tile_indexes
 
 
 class Game(State):
@@ -19,16 +18,16 @@ class Game(State):
         self._player = Player()
         self._player_move_counter = 0
 
-        self._key_img = pygame.image.load('key.jpg')
+        self._key_img = pygame.image.load('app/img/key.jpg')
         self._key_img = pygame.transform.scale(self._key_img, (TileManager.tile_width, TileManager.tile_height))
 
-        self._door_img = pygame.image.load('door.jpg')
+        self._door_img = pygame.image.load('app/img/door.jpg')
         self._door_img = pygame.transform.scale(self._door_img, (TileManager.tile_width, TileManager.tile_height))
 
-        self._enemy_img = pygame.image.load('enemy.png')
+        self._enemy_img = pygame.image.load('app/img/enemy.png')
         self._enemy_img = pygame.transform.scale(self._enemy_img, (TileManager.tile_width, TileManager.tile_height))
 
-        self._player_img = pygame.image.load('player.png')
+        self._player_img = pygame.image.load('app/img/player.png')
         self._player_img = pygame.transform.scale(self._player_img, (TileManager.tile_width, TileManager.tile_height))
 
         exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
@@ -68,7 +67,6 @@ class Game(State):
 
     def selected(self, event):
         self.__init__()
-        print(f"game: {event}")
 
 
     def _update_game_state(self) -> bool:

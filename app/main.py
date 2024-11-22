@@ -1,11 +1,11 @@
 
-from events import CHANGE_STATE_EVENT
-from game import Game
+from game_state.events import CHANGE_STATE_EVENT
+from game_state.game import Game
 import pygame
 
 from enums import GameState
-from game_status import GameStatus
-from menu import Menu
+from game_status_state.game_status import GameStatus
+from menu_state.menu import Menu
 
 class Main:
     def __init__(self) -> None:
@@ -35,10 +35,8 @@ class Main:
     def update_game_state(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("quit")
                 return False
             elif event.type == CHANGE_STATE_EVENT:
-                print(f"eventZ: {event}")
                 self.current_state = event.new_state
                 self.state_objects[self.current_state].selected(event)
         return True

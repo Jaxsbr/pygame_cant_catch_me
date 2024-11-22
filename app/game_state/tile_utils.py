@@ -1,7 +1,7 @@
 from typing import List
 import pygame
 
-from tile_manager import TileManager
+from game_state.tile_manager import TileManager
 
 
 def get_surrounding_linear_indexes(current_index: pygame.Vector2) -> List[pygame.Vector2]:

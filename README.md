@@ -28,7 +28,7 @@ Install dependencies
 
 Run
 
-`python3 main.py`
+`python3 app/main.py`
 
 
 ## How to put the game on ubuntu

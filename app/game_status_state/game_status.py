@@ -1,4 +1,4 @@
-from events import CHANGE_STATE_EVENT
+from game_state.events import CHANGE_STATE_EVENT
 from enums import GameState, GameStatuses
 from state import State
 import pygame
@@ -24,7 +24,6 @@ class GameStatus(State):
 
 
     def selected(self, event):
-        print(f"game_status: {event}")
         self._status = event.data
         if self._status == GameStatuses.WIN:
             self._fill_color = "green"
@@ -41,7 +40,6 @@ class GameStatus(State):
         if self._play_button.collidepoint(mouse_pos):
             self._hover_color = "yellow"
             if mouse_clicked:
-                print("clicked")
                 pygame.event.post(
                     pygame.event.Event(CHANGE_STATE_EVENT, {"new_state": GameState.GAME})
                 )

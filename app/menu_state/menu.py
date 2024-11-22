@@ -1,4 +1,4 @@
-from events import CHANGE_STATE_EVENT
+from game_state.events import CHANGE_STATE_EVENT
 from enums import GameState
 from state import State
 import pygame
@@ -19,7 +19,7 @@ class Menu(State):
 
 
     def selected(self, event):
-        print(f"menu: {event}")
+        pass
 
 
     def update(self, dt):

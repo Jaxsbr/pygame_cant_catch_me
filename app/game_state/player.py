@@ -1,8 +1,7 @@
 import random
 import pygame
 
-from events import PLAYER_MOVED_EVENT
-from tile_manager import TileManager
+from game_state.tile_manager import TileManager
 
 class Player:
 
