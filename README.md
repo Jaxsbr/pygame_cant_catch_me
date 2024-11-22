@@ -50,3 +50,11 @@ Path=/location/of/code
 ```
 
 `Exec`: We launch the game using `bash` in order to chain commands. These are the same commands defined in the [Run Locally](#run-locally) section above
+
+`Path`: To access files and images the game needs to know where assets are located
+
+Once the .desktop file is run, you might encounter security/permission issues.
+Simply follow the ubuntu recommendation that pop up when launching from the desktop icon.
+e.g.
+- `Allow Launching` - from the right click context menu
+- `Allow executing file as program` - from the right click context menu, find properties, find permission
