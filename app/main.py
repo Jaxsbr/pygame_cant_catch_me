@@ -12,14 +12,29 @@ class Main:
         pygame.init()
         self.dt = 0
         self.bounds = pygame.Rect(0, 0, 1280, 640)
+        self.clock = pygame.time.Clock()
+        self.screen = pygame.display.set_mode((self.bounds.width, self.bounds.height))
         self.current_state = GameState.MENU
         self.state_objects = {
             GameState.MENU: Menu(self.bounds),
-            GameState.GAME: Game(),
+            GameState.GAME: Game(self._load_sprites()),
             GameState.GAME_STATUS: GameStatus(self.bounds)
         }
-        self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode((self.bounds.width, self.bounds.height))
+
+
+    def _load_sprites(self) -> dict[str, pygame.Surface]:
+        sprite_sheet = pygame.image.load("app/img/sprite_sheet.png").convert_alpha()
+        sprite_width = 64
+        sprite_height = 64
+
+        sprites = {
+            "player": sprite_sheet.subsurface(pygame.Rect(0, 0, sprite_width, sprite_height)),
+            "enemy": sprite_sheet.subsurface(pygame.Rect(sprite_width, 0, sprite_width, sprite_height)),
+            "key": sprite_sheet.subsurface(pygame.Rect(0, sprite_height, sprite_width, sprite_height)),
+            "door": sprite_sheet.subsurface(pygame.Rect(sprite_width, sprite_height, sprite_width, sprite_height)),
+        }
+
+        return sprites
 
 
     def update(self):

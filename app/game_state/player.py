@@ -16,6 +16,11 @@ class Player:
         self._move_time = 0.2
         self._circle_radius = TileManager.tile_circle_radius / 2
         self._position = pygame.Vector2(0, 0)
+        self._draw_rect = pygame.Rect(
+            self._position.x - TileManager.tile_width_offset,
+            self._position.y - TileManager.tile_height_offset,
+            TileManager.tile_width,
+            TileManager.tile_height)
 
 
     def set_next_movement(self, move_tile: pygame.Vector2):
@@ -45,12 +50,9 @@ class Player:
         else:
             self._color = "red"
 
+        self._draw_rect.x = self._position.x - TileManager.tile_width_offset
+        self._draw_rect.y = self._position.y - TileManager.tile_height_offset
+
 
     def draw(self, screen, img) -> None:
-        screen.blit(
-            img,
-            pygame.Rect(
-                self._position.x - TileManager.tile_width_offset,
-                self._position.y - TileManager.tile_height_offset,
-                TileManager.tile_width,
-                TileManager.tile_height))
+        screen.blit(img, self._draw_rect)

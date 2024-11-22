@@ -1,4 +1,4 @@
-import pygame
+import pygame # type: ignore
 import random
 from game_state.enemy import Enemy
 from game_state.events import CHANGE_STATE_EVENT
@@ -11,24 +11,15 @@ from game_state.tile_utils import get_surrounding_linear_indexes, get_surroundin
 
 class Game(State):
 
-    def __init__(self) -> None:
+    def __init__(self, sprites: dict[str, pygame.Surface]) -> None:
         self._key_collected = False
         self._exit_reached = False
         self._tile_manager = TileManager()
         self._player = Player()
         self._player_move_counter = 0
+        self._sprites = sprites
 
-        self._key_img = pygame.image.load('app/img/key.jpg')
-        self._key_img = pygame.transform.scale(self._key_img, (TileManager.tile_width, TileManager.tile_height))
-
-        self._door_img = pygame.image.load('app/img/door.jpg')
-        self._door_img = pygame.transform.scale(self._door_img, (TileManager.tile_width, TileManager.tile_height))
-
-        self._enemy_img = pygame.image.load('app/img/enemy.png')
-        self._enemy_img = pygame.transform.scale(self._enemy_img, (TileManager.tile_width, TileManager.tile_height))
-
-        self._player_img = pygame.image.load('app/img/player.png')
-        self._player_img = pygame.transform.scale(self._player_img, (TileManager.tile_width, TileManager.tile_height))
+        self._sprite_sheet_img = pygame.image.load('app/img/sprite_sheet.png')
 
         exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
 
@@ -48,9 +39,21 @@ class Game(State):
             self._key_tile_index.x * TileManager.tile_width + TileManager.tile_width_offset,
             self._key_tile_index.y * TileManager.tile_height + TileManager.tile_height_offset)
 
-        self._exit_pos = pygame.Vector2(
+        self._key_rect = pygame.Rect(
+            self._key_pos.x - TileManager.tile_width_offset,
+            self._key_pos.y - TileManager.tile_height_offset,
+            TileManager.tile_width,
+            TileManager.tile_height)
+
+        self._door_pos = pygame.Vector2(
             self._exit_tile_index.x * TileManager.tile_width + TileManager.tile_width_offset,
             self._exit_tile_index.y * TileManager.tile_height + TileManager.tile_height_offset)
+
+        self._door_rect = pygame.Rect(
+            self._door_pos.x - TileManager.tile_width_offset,
+            self._door_pos.y - TileManager.tile_height_offset,
+            TileManager.tile_width,
+            TileManager.tile_height)
 
 
     def _generate_random_vector2(self, exclude_tiles_indexes):
@@ -66,12 +69,12 @@ class Game(State):
 
 
     def selected(self, event):
-        self.__init__()
+        self.__init__(self._sprites)
 
 
     def _update_game_state(self) -> bool:
         if self._exit_reached:
-            self.__init__() # reset game
+            self.__init__(self._sprites) # reset game
             pygame.event.post(
                 pygame.event.Event(
                     CHANGE_STATE_EVENT,
@@ -169,27 +172,12 @@ class Game(State):
 
     def draw(self, screen):
         screen.fill("gray")
-
         self._tile_manager.draw(screen)
 
         if not self._key_collected:
-            screen.blit(
-                self._key_img,
-                pygame.Rect(
-                    self._key_pos.x - TileManager.tile_width_offset,
-                    self._key_pos.y - TileManager.tile_height_offset,
-                    TileManager.tile_width,
-                    TileManager.tile_height))
+            screen.blit(self._sprites["key"], self._key_rect)
 
         if not self._exit_reached:
-            screen.blit(
-                self._door_img,
-                pygame.Rect(
-                    self._exit_pos.x - TileManager.tile_width_offset,
-                    self._exit_pos.y - TileManager.tile_height_offset,
-                    TileManager.tile_width,
-                    TileManager.tile_height))
-
-            self._player.draw(screen, self._player_img)
-
-            self._enemy.draw(screen, self._enemy_img)
+            screen.blit(self._sprites["door"],self._door_rect)
+            self._player.draw(screen, self._sprites["player"],)
+            self._enemy.draw(screen, self._sprites["enemy"],)

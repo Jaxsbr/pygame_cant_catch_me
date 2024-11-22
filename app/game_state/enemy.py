@@ -15,6 +15,11 @@ class Enemy:
         self._elapsed_move_time = 0
         self._move_time = 0.2
         self._is_caught = False
+        self._draw_rect = pygame.Rect(
+            self._position.x - TileManager.tile_width_offset,
+            self._position.y - TileManager.tile_height_offset,
+            TileManager.tile_width,
+            TileManager.tile_height)
 
 
     def set_target(self, move_to_tile_index):
@@ -43,12 +48,9 @@ class Enemy:
         else:
             self._color = "orange"
 
+        self._draw_rect.x = self._position.x - TileManager.tile_width_offset
+        self._draw_rect.y = self._position.y - TileManager.tile_height_offset
+
 
     def draw(self, screen, img):
-        screen.blit(
-            img,
-            pygame.Rect(
-                self._position.x - TileManager.tile_width_offset,
-                self._position.y - TileManager.tile_height_offset,
-                TileManager.tile_width,
-                TileManager.tile_height))
+        screen.blit(img, self._draw_rect)
