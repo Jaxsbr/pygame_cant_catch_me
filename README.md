@@ -58,3 +58,57 @@ Simply follow the ubuntu recommendation that pop up when launching from the desk
 e.g.
 - `Allow Launching` - from the right click context menu
 - `Allow executing file as program` - from the right click context menu, find properties, find permission
+
+
+## Attempt to make updating to latest game easier
+
+```bash
+#!/bin/bash
+
+# Variables
+ZIP_URL="https://github.com/Jaxsbr/pygame_cant_catch_me/archive/refs/heads/main.zip"
+ZIP_FILE="/tmp/pygame_cant_catch_me_main.zip"
+EXTRACT_DIR="/tmp/pygame_cant_catch_me_main"
+GAME_DIR="/home/user/pygame_cant_catch_me-main"
+
+# Step 1: Download the zip file
+echo "Downloading the latest game files..."
+curl -L -o "$ZIP_FILE" "$ZIP_URL"
+if [ $? -ne 0 ]; then
+    echo "Failed to download the zip file."
+    exit 1
+fi
+
+# Step 2: Extract the content of the zip
+echo "Extracting the zip file..."
+unzip -q "$ZIP_FILE" -d "/tmp"
+if [ $? -ne 0 ]; then
+    echo "Failed to extract the zip file."
+    rm -f "$ZIP_FILE"
+    exit 1
+fi
+
+# Step 3: Delete the existing game directory content
+echo "Deleting old game files..."
+if [ -d "$GAME_DIR" ]; then
+    rm -rf "$GAME_DIR"
+fi
+
+# Step 4: Move the extracted content into the game directory
+echo "Copying new game files..."
+mv "$EXTRACT_DIR/pygame_cant_catch_me-main" "$GAME_DIR"
+if [ $? -ne 0 ]; then
+    echo "Failed to move new game files."
+    rm -rf "$EXTRACT_DIR"
+    rm -f "$ZIP_FILE"
+    exit 1
+fi
+
+# Step 5: Clean up temporary files
+echo "Cleaning up..."
+rm -rf "$EXTRACT_DIR"
+rm -f "$ZIP_FILE"
+
+echo "Update completed successfully!"
+
+```
