@@ -9,3 +9,8 @@ class GameState(Enum):
 class GameStatuses(Enum):
     WIN = 1
     LOSE = 2
+
+
+class TurnType(Enum):
+    PLAYER = 1
+    ENEMY = 2

@@ -5,10 +5,8 @@ from game_state.tile_manager import TileManager
 
 class Player:
 
-    def __init__(self) -> None:
-        self.tile_index = pygame.Vector2(
-            random.randint(0, TileManager.column_count - 1),
-            random.randint(0, TileManager.row_count - 1))
+    def __init__(self, start_tile_index) -> None:
+        self.tile_index = start_tile_index
         self.next_move_tile = pygame.Vector2(0, 0)
         self._color = "red"
         self._is_moving = False

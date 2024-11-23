@@ -1,8 +1,8 @@
+from game_state.turn_engine import TurnEngine
 import pygame # type: ignore
-import random
 from game_state.enemy import Enemy
 from game_state.events import CHANGE_STATE_EVENT
-from enums import GameState, GameStatuses
+from enums import GameState, GameStatuses, TurnType
 from state import State
 from game_state.player import Player
 from game_state.tile_manager import TileManager
@@ -15,23 +15,33 @@ class Game(State):
         self._key_collected = False
         self._exit_reached = False
         self._tile_manager = TileManager()
-        self._player = Player()
+        self._tree_tiles = self._tile_manager.get_trees()
+        self._player_start_tile_index = self._tile_manager.generate_random_vector2(self._tree_tiles)
+        self._player = Player(self._player_start_tile_index)
         self._player_move_counter = 0
+        self._enemy_move_trigger_count = 2
         self._sprites = sprites
+        self._turn_engine = TurnEngine()
 
         self._sprite_sheet_img = pygame.image.load('app/img/sprite_sheet.png')
+        self._tree_img = pygame.image.load('app/img/tree.png')
+        self._tree_img = pygame.transform.scale(self._tree_img, (TileManager.tile_width, TileManager.tile_height))
 
+        # tiles around player
         exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
 
-        self._key_tile_index = self._generate_random_vector2(exclude_tiles_indexes)
+        # combine with trees
+        exclude_tiles_indexes.extend(self._tree_tiles)
+
+        self._key_tile_index = self._tile_manager.generate_random_vector2(exclude_tiles_indexes)
 
         exclude_tiles_indexes.append(self._key_tile_index)
 
-        self._exit_tile_index = self._generate_random_vector2(exclude_tiles_indexes)
+        self._door_tile_index = self._tile_manager.generate_random_vector2(exclude_tiles_indexes)
 
-        exclude_tiles_indexes.append(self._exit_tile_index)
+        exclude_tiles_indexes.append(self._door_tile_index)
 
-        enemy_start_tile = self._generate_random_vector2(exclude_tiles_indexes)
+        enemy_start_tile = self._tile_manager.generate_random_vector2(exclude_tiles_indexes)
 
         self._enemy = Enemy(self._tile_manager, enemy_start_tile)
 
@@ -46,26 +56,14 @@ class Game(State):
             TileManager.tile_height)
 
         self._door_pos = pygame.Vector2(
-            self._exit_tile_index.x * TileManager.tile_width + TileManager.tile_width_offset,
-            self._exit_tile_index.y * TileManager.tile_height + TileManager.tile_height_offset)
+            self._door_tile_index.x * TileManager.tile_width + TileManager.tile_width_offset,
+            self._door_tile_index.y * TileManager.tile_height + TileManager.tile_height_offset)
 
         self._door_rect = pygame.Rect(
             self._door_pos.x - TileManager.tile_width_offset,
             self._door_pos.y - TileManager.tile_height_offset,
             TileManager.tile_width,
             TileManager.tile_height)
-
-
-    def _generate_random_vector2(self, exclude_tiles_indexes):
-        # find new random vector index not in excluded list
-        while True:
-            x = random.randint(0, TileManager.column_count - 1)
-            y = random.randint(0, TileManager.row_count - 1)
-
-            random_vector = pygame.Vector2(x, y)
-
-            if random_vector not in exclude_tiles_indexes:
-                return random_vector
 
 
     def selected(self, event):
@@ -91,7 +89,7 @@ class Game(State):
         if self._player.tile_index == self._key_tile_index:
             self._key_collected = True
 
-        if self._key_collected and self._player.tile_index == self._exit_tile_index:
+        if self._key_collected and self._player.tile_index == self._door_tile_index:
             self._exit_reached = True
 
 
@@ -116,14 +114,33 @@ class Game(State):
         self._enemy.update(dt, enemy_pos, self._player.tile_index)
         self._update_enemy_player_catching(enemy_pos, player_pos)
 
+        # Has the player stopped moving during it's turn, if yest set enemies turn
+        if not self._player._is_moving and self._turn_engine.get_current_turn() == TurnType.PLAYER:
+            if self._player_move_counter >= self._enemy_move_trigger_count:
+                self._turn_engine.next_turn()
+                self._update_enemy_move_target()
+                self._player_move_counter = 0
+
+        # Has the enemy stopped moving during it's turn, if yes set players turn
+        if not self._enemy._is_moving and self._turn_engine.get_current_turn() == TurnType.ENEMY:
+            self._turn_engine.next_turn()
+
 
     def _update_enemy_move_target(self):
+        if not self._turn_engine.get_current_turn() == TurnType.ENEMY:
+            return
+
         move_tile_indexes = get_surrounding_linear_indexes(self._enemy.tile_index)
         closest_distance = float('inf')
         closest_tile = None
 
         self._player_pos = self._tile_manager.get_tile_pos(self._player.tile_index)
         for index in move_tile_indexes:
+            # exclude special tiles
+            if index == self._key_tile_index or index == self._door_tile_index or self._tile_manager._is_tree(index):
+                print("enemy blocked tile found")
+                continue
+
             pos = self._tile_manager.get_tile_pos(index)
             distance = self._player_pos.distance_to(pos)
 
@@ -135,8 +152,10 @@ class Game(State):
 
 
     def _update_player_movements(self):
-        pressed_key = pygame.key.get_pressed()
+        if not self._turn_engine.get_current_turn() == TurnType.PLAYER:
+            return
 
+        pressed_key = pygame.key.get_pressed()
         if not self._player.is_moving() and (pressed_key[pygame.K_LEFT] or pressed_key[pygame.K_RIGHT] or pressed_key[pygame.K_UP] or pressed_key[pygame.K_DOWN]):
             x = 0
             if pressed_key[pygame.K_LEFT]:
@@ -150,15 +169,18 @@ class Game(State):
             elif pressed_key[pygame.K_UP]:
                 y = -1
 
-            next_x = max(0, min(x + self._player.tile_index.x, TileManager.column_count - 1))
-            next_y = max(0, min(y + self._player.tile_index.y, TileManager.row_count - 1))
+            next_move_tile = pygame.Vector2(
+                max(0, min(x + self._player.tile_index.x, TileManager.column_count - 1)),
+                max(0, min(y + self._player.tile_index.y, TileManager.row_count - 1)))
 
-            self._player.set_next_movement(pygame.Vector2(next_x, next_y))
+            # Can't move out of bounds
+            # Can't move through door without key
+            # Can't move through trees
+            if next_move_tile == self._player.tile_index or (not self._key_collected and next_move_tile == self._door_tile_index) or self._tile_manager._is_tree(next_move_tile):
+                return
+
+            self._player.set_next_movement(next_move_tile)
             self._player_move_counter += 1
-
-            if self._player_move_counter >= 2:
-                self._update_enemy_move_target()
-                self._player_move_counter = 0
 
 
     def update(self, dt):
@@ -172,7 +194,7 @@ class Game(State):
 
     def draw(self, screen):
         screen.fill("gray")
-        self._tile_manager.draw(screen)
+        self._tile_manager.draw(screen, self._tree_img)
 
         if not self._key_collected:
             screen.blit(self._sprites["key"], self._key_rect)
