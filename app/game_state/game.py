@@ -21,6 +21,7 @@ class Game(State):
         self._player_start_tile_index = self._tile_manager.generate_random_vector2(self._tree_tiles)
         self._player = Player(self._player_start_tile_index)
         self._player_move_counter = 0
+        self._has_player_moved = False
         self._enemy_move_trigger_count = self._difficulty_engine.get_enemy_move_value()
         self._sprites = sprites
         self._turn_engine = TurnEngine()
@@ -97,6 +98,9 @@ class Game(State):
 
 
     def _update_enemy_player_catching(self, enemy_pos: pygame.Vector2, player_pos: pygame.Vector2):
+        if not self._has_player_moved:
+            return
+
         distance = enemy_pos.distance_to(player_pos)
         if distance <= max(TileManager.tile_width, TileManager.tile_height) + min(TileManager.tile_width, TileManager.tile_height) / 2:
             pygame.event.post(
@@ -130,7 +134,7 @@ class Game(State):
 
 
     def _update_enemy_move_target(self):
-        if not self._turn_engine.get_current_turn() == TurnType.ENEMY:
+        if not self._has_player_moved or not self._turn_engine.get_current_turn() == TurnType.ENEMY:
             return
 
         move_tile_indexes = get_surrounding_linear_indexes(self._enemy.tile_index)
@@ -141,7 +145,6 @@ class Game(State):
         for index in move_tile_indexes:
             # exclude special tiles
             if index == self._key_tile_index or index == self._door_tile_index or self._tile_manager._is_tree(index):
-                print("enemy blocked tile found")
                 continue
 
             pos = self._tile_manager.get_tile_pos(index)
@@ -182,6 +185,7 @@ class Game(State):
             if next_move_tile == self._player.tile_index or (not self._key_collected and next_move_tile == self._door_tile_index) or self._tile_manager._is_tree(next_move_tile):
                 return
 
+            self._has_player_moved = True
             self._player.set_next_movement(next_move_tile)
             self._player_move_counter += 1
 
