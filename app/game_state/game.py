@@ -26,7 +26,6 @@ class Game(State):
         self._sprites = sprites
         self._turn_engine = TurnEngine()
 
-        self._sprite_sheet_img = pygame.image.load('app/img/sprite_sheet.png')
         self._tree_img = pygame.image.load('app/img/tree.png')
         self._tree_img = pygame.transform.scale(self._tree_img, (TileManager.tile_width, TileManager.tile_height))
 

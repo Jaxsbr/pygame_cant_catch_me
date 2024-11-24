@@ -25,7 +25,7 @@ class Main:
 
 
     def _load_sprites(self) -> dict[str, pygame.Surface]:
-        sprite_sheet = pygame.image.load("app/img/sprite_sheet.png").convert_alpha()
+        sprite_sheet = pygame.image.load("app/img/sprite_sheet_1.png").convert_alpha()
         sprite_width = 64
         sprite_height = 64
 
