@@ -1,4 +1,5 @@
 
+from game_state.difficulty_engine import DifficultyEngine
 from game_state.events import CHANGE_STATE_EVENT
 from game_state.game import Game
 import pygame
@@ -15,9 +16,10 @@ class Main:
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode((self.bounds.width, self.bounds.height))
         self.current_state = GameState.MENU
+        self.difficulty_engine = DifficultyEngine()
         self.state_objects = {
-            GameState.MENU: Menu(self.bounds),
-            GameState.GAME: Game(self._load_sprites()),
+            GameState.MENU: Menu(self.bounds, self.difficulty_engine),
+            GameState.GAME: Game(self._load_sprites(), self.difficulty_engine),
             GameState.GAME_STATUS: GameStatus(self.bounds)
         }
 

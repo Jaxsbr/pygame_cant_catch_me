@@ -1,3 +1,4 @@
+from game_state.difficulty_engine import DifficultyEngine
 from game_state.turn_engine import TurnEngine
 import pygame # type: ignore
 from game_state.enemy import Enemy
@@ -11,7 +12,8 @@ from game_state.tile_utils import get_surrounding_linear_indexes, get_surroundin
 
 class Game(State):
 
-    def __init__(self, sprites: dict[str, pygame.Surface]) -> None:
+    def __init__(self, sprites: dict[str, pygame.Surface], difficulty_engine: DifficultyEngine) -> None:
+        self._difficulty_engine = difficulty_engine
         self._key_collected = False
         self._exit_reached = False
         self._tile_manager = TileManager()
@@ -19,7 +21,7 @@ class Game(State):
         self._player_start_tile_index = self._tile_manager.generate_random_vector2(self._tree_tiles)
         self._player = Player(self._player_start_tile_index)
         self._player_move_counter = 0
-        self._enemy_move_trigger_count = 2
+        self._enemy_move_trigger_count = self._difficulty_engine.get_enemy_move_value()
         self._sprites = sprites
         self._turn_engine = TurnEngine()
 
@@ -67,12 +69,13 @@ class Game(State):
 
 
     def selected(self, event):
-        self.__init__(self._sprites)
+        self.__init__(self._sprites, self._difficulty_engine)
+        self._player_move_counter = self._difficulty_engine.get_enemy_move_value()
 
 
     def _update_game_state(self) -> bool:
         if self._exit_reached:
-            self.__init__(self._sprites) # reset game
+            self.__init__(self._sprites, self._difficulty_engine) # reset game
             pygame.event.post(
                 pygame.event.Event(
                     CHANGE_STATE_EVENT,

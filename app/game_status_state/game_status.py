@@ -1,3 +1,4 @@
+from game_state.difficulty_engine import DifficultyEngine
 from game_state.events import CHANGE_STATE_EVENT
 from enums import GameState, GameStatuses
 from state import State

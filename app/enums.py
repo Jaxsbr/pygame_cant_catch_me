@@ -14,3 +14,8 @@ class GameStatuses(Enum):
 class TurnType(Enum):
     PLAYER = 1
     ENEMY = 2
+
+class Difficulty(Enum):
+    EASY = 1
+    MEDIUM = 2
+    HARD = 3
