@@ -1,4 +1,6 @@
+import math
 import random
+from particle_engine import Particle, ParticleEngine
 from game_state.difficulty_engine import DifficultyEngine
 from game_state.turn_engine import TurnEngine
 import pygame # type: ignore
@@ -26,6 +28,7 @@ class Game(State):
         self._enemy_move_trigger_count = self._difficulty_engine.get_enemy_move_value()
         self._sprites = sprites
         self._turn_engine = TurnEngine()
+        self._particle_engine = ParticleEngine()
 
         self._tree_img = pygame.image.load('app/assets/img/tree.png')
         self._tree_img = pygame.transform.scale(self._tree_img, (TileManager.tile_width, TileManager.tile_height))
@@ -86,6 +89,14 @@ class Game(State):
             TileManager.tile_width,
             TileManager.tile_height)
 
+        self._colors = [
+            pygame.Color(255, 255, 0, 255),   # yellow
+            pygame.Color(255, 0, 0, 255),     # red
+            pygame.Color(128, 0, 128, 255),   # purple
+            pygame.Color(0, 0, 255, 255),     # blue
+            pygame.Color(255, 165, 0, 255)    # orange
+        ]
+
 
     def selected(self, event):
         self.__init__(self._sprites, self._difficulty_engine)
@@ -117,6 +128,19 @@ class Game(State):
     def _update_game_objectives(self):
         if self._player.tile_index == self._key_tile_index and not self._key_collected:
             self._key_sound.play()
+            particle_count = random.randint(7, 12)
+            for i in range(particle_count):
+                angle = random.choice(range(0, 361, 6))
+                radians = math.radians(angle)
+                self._particle_engine.emit(
+                    self._key_pos, # TODO: random point around key (visual improvement)
+                    random.choice([0.2, 0.5, 0.7]),
+                    pygame.Vector2(math.cos(radians), math.sin(radians)),
+                    random.choice([200, 350, 500]),
+                    random.choice([5, 7, 9]),
+                    random.choice(self._colors),
+                    True
+                )
 
         if self._player.tile_index == self._key_tile_index:
             self._key_collected = True
@@ -232,6 +256,7 @@ class Game(State):
         self._update_actors(dt)
         self._update_game_objectives()
         self._update_player_movements()
+        self._particle_engine.update(dt)
 
 
     def draw(self, screen):
@@ -245,3 +270,5 @@ class Game(State):
             screen.blit(self._sprites["door"],self._door_rect)
             self._player.draw(screen, self._sprites["player"],)
             self._enemy.draw(screen, self._sprites["enemy"],)
+
+        self._particle_engine.draw(screen)
