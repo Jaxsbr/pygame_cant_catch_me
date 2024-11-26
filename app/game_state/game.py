@@ -1,3 +1,4 @@
+import random
 from game_state.difficulty_engine import DifficultyEngine
 from game_state.turn_engine import TurnEngine
 import pygame # type: ignore
@@ -26,8 +27,20 @@ class Game(State):
         self._sprites = sprites
         self._turn_engine = TurnEngine()
 
-        self._tree_img = pygame.image.load('app/img/tree.png')
+        self._tree_img = pygame.image.load('app/assets/img/tree.png')
         self._tree_img = pygame.transform.scale(self._tree_img, (TileManager.tile_width, TileManager.tile_height))
+
+        self._player_move_sound = pygame.mixer.Sound('app/assets/sounds/thud1.wav')
+        self._player_move_sound.set_volume(0.1)
+
+        self._enemy_move_sound = pygame.mixer.Sound('app/assets/sounds/thud2.wav')
+        self._enemy_move_sound.set_volume(0.2)
+
+        self._key_sound = pygame.mixer.Sound('app/assets/sounds/key.mp3')
+        self._key_sound.set_volume(0.9)
+
+        self._door_sound = pygame.mixer.Sound('app/assets/sounds/door.wav')
+        self._door_sound.set_volume(0.7)
 
         # tiles around player
         exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
@@ -72,10 +85,16 @@ class Game(State):
         self.__init__(self._sprites, self._difficulty_engine)
         self._player_move_counter = self._difficulty_engine.get_enemy_move_value()
 
+        track = random.randint(1, 3)
+        pygame.mixer.music.load(f'app/assets/sounds/bach-{track}.mp3')
+        pygame.mixer.music.set_volume(0.3)
+        pygame.mixer.music.play(loops=-1)
+
 
     def _update_game_state(self) -> bool:
         if self._exit_reached:
             self.__init__(self._sprites, self._difficulty_engine) # reset game
+            pygame.mixer.music.stop()
             pygame.event.post(
                 pygame.event.Event(
                     CHANGE_STATE_EVENT,
@@ -89,8 +108,14 @@ class Game(State):
 
 
     def _update_game_objectives(self):
+        if self._player.tile_index == self._key_tile_index and not self._key_collected:
+            self._key_sound.play()
+
         if self._player.tile_index == self._key_tile_index:
             self._key_collected = True
+
+        if self._key_collected and self._player.tile_index == self._door_tile_index and not self._exit_reached:
+            self._door_sound.play()
 
         if self._key_collected and self._player.tile_index == self._door_tile_index:
             self._exit_reached = True
@@ -102,6 +127,7 @@ class Game(State):
 
         distance = enemy_pos.distance_to(player_pos)
         if distance <= max(TileManager.tile_width, TileManager.tile_height) + min(TileManager.tile_width, TileManager.tile_height) / 2:
+            pygame.mixer.music.stop()
             pygame.event.post(
                 pygame.event.Event(
                     CHANGE_STATE_EVENT,
@@ -154,6 +180,7 @@ class Game(State):
                 closest_tile = index
 
         self._enemy.set_target(closest_tile)
+        self._enemy_move_sound.play()
 
 
     def _update_player_movements(self):
@@ -187,6 +214,7 @@ class Game(State):
             self._has_player_moved = True
             self._player.set_next_movement(next_move_tile)
             self._player_move_counter += 1
+            self._player_move_sound.play()
 
 
     def update(self, dt):
