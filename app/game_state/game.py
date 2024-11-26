@@ -42,6 +42,12 @@ class Game(State):
         self._door_sound = pygame.mixer.Sound('app/assets/sounds/door.wav')
         self._door_sound.set_volume(0.7)
 
+        self._win_sound = pygame.mixer.Sound('app/assets/sounds/win.wav')
+        self._win_sound.set_volume(0.7)
+
+        self._lose_sound = pygame.mixer.Sound('app/assets/sounds/lose.wav')
+        self._lose_sound.set_volume(0.7)
+
         # tiles around player
         exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
 
@@ -95,6 +101,7 @@ class Game(State):
         if self._exit_reached:
             self.__init__(self._sprites, self._difficulty_engine) # reset game
             pygame.mixer.music.stop()
+            self._win_sound.play()
             pygame.event.post(
                 pygame.event.Event(
                     CHANGE_STATE_EVENT,
@@ -128,6 +135,7 @@ class Game(State):
         distance = enemy_pos.distance_to(player_pos)
         if distance <= max(TileManager.tile_width, TileManager.tile_height) + min(TileManager.tile_width, TileManager.tile_height) / 2:
             pygame.mixer.music.stop()
+            self._lose_sound.play()
             pygame.event.post(
                 pygame.event.Event(
                     CHANGE_STATE_EVENT,
