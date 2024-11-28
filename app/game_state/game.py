@@ -1,5 +1,6 @@
 import math
 import random
+from game_state.key import Key
 from particle_engine import Particle, ParticleEngine
 from game_state.difficulty_engine import DifficultyEngine
 from game_state.turn_engine import TurnEngine
@@ -52,32 +53,25 @@ class Game(State):
         self._lose_sound.set_volume(0.7)
 
         # tiles around player
-        exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
+        self._exclude_tiles_indexes = get_surrounding_tile_indexes(self._player.tile_index)
 
         # combine with trees
-        exclude_tiles_indexes.extend(self._tree_tiles)
+        self._exclude_tiles_indexes.extend(self._tree_tiles)
 
-        self._key_tile_index = self._tile_manager.generate_random_vector2(exclude_tiles_indexes)
+        self._key_count = random.randint(2, 5)
+        self._keys = [self._get_key() for _ in range(self._key_count)]
 
-        exclude_tiles_indexes.append(self._key_tile_index)
+        self._key_tile_index = self._tile_manager.generate_random_vector2(self._exclude_tiles_indexes)
 
-        self._door_tile_index = self._tile_manager.generate_random_vector2(exclude_tiles_indexes)
+        self._exclude_tiles_indexes.append(self._key_tile_index)
 
-        exclude_tiles_indexes.append(self._door_tile_index)
+        self._door_tile_index = self._tile_manager.generate_random_vector2(self._exclude_tiles_indexes)
 
-        enemy_start_tile = self._tile_manager.generate_random_vector2(exclude_tiles_indexes)
+        self._exclude_tiles_indexes.append(self._door_tile_index)
+
+        enemy_start_tile = self._tile_manager.generate_random_vector2(self._exclude_tiles_indexes)
 
         self._enemy = Enemy(self._tile_manager, enemy_start_tile)
-
-        self._key_pos = pygame.Vector2(
-            self._key_tile_index.x * TileManager.tile_width + TileManager.tile_width_offset,
-            self._key_tile_index.y * TileManager.tile_height + TileManager.tile_height_offset)
-
-        self._key_rect = pygame.Rect(
-            self._key_pos.x - TileManager.tile_width_offset,
-            self._key_pos.y - TileManager.tile_height_offset,
-            TileManager.tile_width,
-            TileManager.tile_height)
 
         self._door_pos = pygame.Vector2(
             self._door_tile_index.x * TileManager.tile_width + TileManager.tile_width_offset,
@@ -108,6 +102,12 @@ class Game(State):
         pygame.mixer.music.play(loops=-1)
 
 
+    def _get_key(self) -> Key:
+        tile_index = self._tile_manager.generate_random_vector2(self._exclude_tiles_indexes)
+        self._exclude_tiles_indexes.append(tile_index)
+        return Key(tile_index)
+
+
     def _update_game_state(self) -> bool:
         if self._exit_reached:
             self.__init__(self._sprites, self._difficulty_engine) # reset game
@@ -125,15 +125,25 @@ class Game(State):
         return False
 
 
+    def _check_key_collision(self, index: pygame.Vector2) -> Key | None:
+        for key in self._keys:
+            if key.tile_index == index:
+                return key
+        return None
+
+
     def _update_game_objectives(self):
-        if self._player.tile_index == self._key_tile_index and not self._key_collected:
+        collided_key = self._check_key_collision(self._player.tile_index)
+        # player collects key, but there are keys remaining
+        if collided_key and len(self._keys) > 0:
             self._key_sound.play()
+            self._keys.remove(collided_key)
             particle_count = random.randint(7, 12)
             for i in range(particle_count):
                 angle = random.choice(range(0, 361, 6))
                 radians = math.radians(angle)
                 self._particle_engine.emit(
-                    self._key_pos, # TODO: random point around key (visual improvement)
+                    collided_key.position,
                     random.choice([0.2, 0.5, 0.7]),
                     pygame.Vector2(math.cos(radians), math.sin(radians)),
                     random.choice([200, 350, 500]),
@@ -142,13 +152,12 @@ class Game(State):
                     True
                 )
 
-        if self._player.tile_index == self._key_tile_index:
-            self._key_collected = True
+        keys_collected = len(self._keys) <= 0
 
-        if self._key_collected and self._player.tile_index == self._door_tile_index and not self._exit_reached:
+        if keys_collected and self._player.tile_index == self._door_tile_index and not self._exit_reached:
             self._door_sound.play()
 
-        if self._key_collected and self._player.tile_index == self._door_tile_index:
+        if keys_collected and self._player.tile_index == self._door_tile_index:
             self._exit_reached = True
 
 
@@ -240,7 +249,7 @@ class Game(State):
             # Can't move out of bounds
             # Can't move through door without key
             # Can't move through trees
-            if next_move_tile == self._player.tile_index or (not self._key_collected and next_move_tile == self._door_tile_index) or self._tile_manager._is_tree(next_move_tile):
+            if next_move_tile == self._player.tile_index or (len(self._keys) > 0 and next_move_tile == self._door_tile_index) or self._tile_manager._is_tree(next_move_tile):
                 return
 
             self._has_player_moved = True
@@ -263,8 +272,8 @@ class Game(State):
         screen.fill("gray")
         self._tile_manager.draw(screen, self._tree_img)
 
-        if not self._key_collected:
-            screen.blit(self._sprites["key"], self._key_rect)
+        for key in self._keys:
+            key.draw(screen, self._sprites["key"])
 
         if not self._exit_reached:
             screen.blit(self._sprites["door"],self._door_rect)

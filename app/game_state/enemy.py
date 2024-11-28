@@ -1,5 +1,6 @@
 import pygame
 
+from game_state.particle_trail import ParticleTrail
 from game_state.tile_manager import TileManager
 
 
@@ -20,6 +21,13 @@ class Enemy:
             self._position.y - TileManager.tile_height_offset,
             TileManager.tile_width,
             TileManager.tile_height)
+        self._particle_trail = ParticleTrail(
+            [
+                pygame.Color(255, 0, 0, 255),     # red
+                pygame.Color(255, 255, 100, 255),   # ?
+            ],
+            2 # fade_time
+        )
 
 
     def set_target(self, move_to_tile_index):
@@ -51,6 +59,9 @@ class Enemy:
         self._draw_rect.x = self._position.x - TileManager.tile_width_offset
         self._draw_rect.y = self._position.y - TileManager.tile_height_offset
 
+        self._particle_trail.update(dt, self._position)
+
 
     def draw(self, screen, img):
+        self._particle_trail.draw(screen)
         screen.blit(img, self._draw_rect)

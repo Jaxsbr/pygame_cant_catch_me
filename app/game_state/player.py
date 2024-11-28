@@ -1,6 +1,6 @@
-import random
 import pygame
 
+from game_state.particle_trail import ParticleTrail
 from game_state.tile_manager import TileManager
 
 class Player:
@@ -19,6 +19,13 @@ class Player:
             self._position.y - TileManager.tile_height_offset,
             TileManager.tile_width,
             TileManager.tile_height)
+        self._particle_trail = ParticleTrail(
+            [
+                pygame.Color(255, 255, 0, 255),   # yellow
+                pygame.Color(255, 255, 255, 255),   # ?
+            ],
+            2 # fade_time
+        )
 
 
     def set_next_movement(self, move_tile: pygame.Vector2):
@@ -42,6 +49,7 @@ class Player:
     def update(self, dt, position) -> None:
         self._position = position
         self._update_movement(dt)
+        self._particle_trail.update(dt, self._position)
 
         if self._is_moving:
             self._color = "blue"
@@ -53,4 +61,5 @@ class Player:
 
 
     def draw(self, screen, img) -> None:
+        self._particle_trail.draw(screen)
         screen.blit(img, self._draw_rect)
