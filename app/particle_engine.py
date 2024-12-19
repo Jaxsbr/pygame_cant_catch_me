@@ -46,7 +46,7 @@ class Particle:
         self._direction = direction
         self._speed = speed
         self._size = size
-        self._color = color
+        self._color = pygame.Color(color.r, color.g, color.b, color.a)
         self._has_gravity = has_gravity
         self._velocity = self._direction * self._speed
         self._gravity = 9.8

@@ -90,7 +90,7 @@ class GameStatus(State):
                         random.choice([1.5, 3, 4.5]),
                         pygame.Vector2(math.cos(radians), math.sin(radians)),
                         random.choice([100, 250, 300, 500, 600]),
-                        random.choice([5, 7, 9, 12]),
+                        random.choice([5, 7, 9, 12, 25]),
                         random.choice(self._happy_colors),
                         True
                     )
